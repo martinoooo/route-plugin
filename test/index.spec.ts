@@ -9,8 +9,8 @@ describe('Container', function () {
       @Router('test')
       class SomeClass {
         @Get('/a')
-        someGetMethod() {
-          return 'hello world';
+        someGetMethod(ctx) {
+          ctx.body = 'Hello World!';
         }
 
         @Post('/b')
