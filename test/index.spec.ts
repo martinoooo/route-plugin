@@ -9,12 +9,16 @@ describe('Container', function () {
       @Router('test')
       class SomeClass {
         @Get('/a')
-        someGetMethod(ctx) {
-          ctx.body = 'Hello World!';
+        someGetMethod(ctx, next) {
+          ctx.body = this.mySecret();
         }
 
         @Post('/b')
         somePostMethod() {}
+
+        private mySecret() {
+          return 'Hello World!';
+        }
       }
 
       Reflect.getMetadata(PATH_METADATA, SomeClass); // '/test'

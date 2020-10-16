@@ -468,6 +468,14 @@
     "@types/yargs" "^15.0.0"
     chalk "^4.0.0"
 
+"@martinoooo/dependency-injection@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@martinoooo/dependency-injection/-/dependency-injection-0.0.2.tgz#7220a01722ee3d0e4aa39761c26fd8a94a5f3ec8"
+  integrity sha512-5beZdcsbeXlb+ShYfbJDmL0YpqAug5gleBJMZJ5ypO85D3HJL4eOKNiUduzbIp7w1yaYRalNcamu9R4kQ+Zx0Q==
+  dependencies:
+    reflect-metadata "^0.1.13"
+    typescript "^4.0.3"
+
 "@sinonjs/commons@^1.7.0":
   version "1.8.1"
   resolved "https://registry.npm.taobao.org/@sinonjs/commons/download/@sinonjs/commons-1.8.1.tgz#e7df00f98a203324f6dc7cc606cad9d4a8ab2217"

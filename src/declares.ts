@@ -5,10 +5,12 @@ export interface IKoaServerConfig {
   routers?: Function[];
 }
 
-export type IRouteConfig = Array<{
+export type IRouteConfig = {
   baseRoute: string;
   route: string;
   method: string;
   fn: Function;
   methodName: string;
-}>;
+};
+
+export type ClassDecorator = <T extends { new (...args: any[]): {} }>(target: T) => T | void;
