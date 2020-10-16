@@ -1,5 +1,6 @@
 export const METHOD_METADATA = Symbol('method');
 export const PATH_METADATA = Symbol('path');
+export const PARAMS_METADATA = Symbol('params');
 
 export interface IKoaServerConfig {
   routers?: Function[];

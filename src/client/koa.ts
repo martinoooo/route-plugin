@@ -1,5 +1,6 @@
 import Koa from 'koa';
 import Router from 'koa-router';
+import bodyParser from 'koa-bodyparser';
 import { IKoaServerConfig } from '../declares';
 import { parseRoute } from '../decorators/router';
 
@@ -9,6 +10,7 @@ export function useKoaServer(app: Koa, config: IKoaServerConfig) {
 
   routers.map(router => registryRoute(koaRouter, router));
 
+  app.use(bodyParser());
   app.use(koaRouter.routes()).use(koaRouter.allowedMethods());
 }
 

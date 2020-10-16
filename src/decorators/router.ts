@@ -1,4 +1,4 @@
-import { METHOD_METADATA, PATH_METADATA, IRouteConfig, ClassDecorator } from '../declares';
+import { METHOD_METADATA, PATH_METADATA, IRouteConfig, ClassDecorator, PARAMS_METADATA } from '../declares';
 import { isConstructor, isFunction } from '../utils';
 import { Service, Container } from '@martinoooo/dependency-injection';
 
@@ -42,11 +42,22 @@ export function parseRoute(target: Function): IRouteConfig[] {
       // 取出定义的 metadata
       const route = Reflect.getMetadata(PATH_METADATA, fn);
       const method = Reflect.getMetadata(METHOD_METADATA, fn);
+
+      const func = (ctx: any, next: any) => {
+        const parametersFactory: Function[] = Reflect.getOwnMetadata(PARAMS_METADATA, prototype, methodName) || [];
+        const decoratorParams = parametersFactory.map(paramFactory => {
+          return paramFactory(ctx);
+        });
+        const params = decoratorParams.concat([ctx, next]);
+
+        return instance[methodName].apply(instance, params);
+      };
+
       return {
         baseRoute,
         route,
         method,
-        fn: (...params: any) => instance[methodName].apply(instance, params),
+        fn: func,
         methodName,
       };
     });
