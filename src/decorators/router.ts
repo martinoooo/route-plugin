@@ -1,6 +1,13 @@
-import { METHOD_METADATA, PATH_METADATA, IRouteConfig, ClassDecorator, PARAMS_METADATA } from '../declares';
+import {
+  METHOD_METADATA,
+  PATH_METADATA,
+  IRouteConfig,
+  ClassDecorator,
+  PARAMS_METADATA,
+  SCOPE_REQUEST_METADATA,
+} from '../declares';
 import { isConstructor, isFunction } from '../utils';
-import { Service, Container } from '@martinoooo/dependency-injection';
+import { Service, Container, depsMetadata, DepsConfig } from '@martinoooo/dependency-injection';
 
 export const Router = (path: string): ClassDecorator => {
   return target => {
@@ -28,8 +35,6 @@ export function parseRoute(target: Function): IRouteConfig[] {
     item => !isConstructor(item) && isFunction(prototype[item])
   );
 
-  const instance: any = Container.get(baseRoute);
-
   return methodsNames
     .filter(methodName => {
       const fn = prototype[methodName];
@@ -43,14 +48,33 @@ export function parseRoute(target: Function): IRouteConfig[] {
       const route = Reflect.getMetadata(PATH_METADATA, fn);
       const method = Reflect.getMetadata(METHOD_METADATA, fn);
 
-      const func = (ctx: any, next: any) => {
+      const func = async (ctx: any, next: any) => {
         const parametersFactory: Function[] = Reflect.getOwnMetadata(PARAMS_METADATA, prototype, methodName) || [];
         const decoratorParams = parametersFactory.map(paramFactory => {
           return paramFactory(ctx);
         });
         const params = decoratorParams.concat([ctx, next]);
 
-        return instance[methodName].apply(instance, params);
+        // 分析如果依赖有request scope
+        const deps: DepsConfig[] = Reflect.getMetadata(depsMetadata, prototype) || [];
+        const isRequest = deps
+          .filter(dep => {
+            if (dep.propertyKey) {
+              const type = dep.typeName();
+              return Reflect.getMetadata(SCOPE_REQUEST_METADATA, type);
+            }
+            return false;
+          })
+          .map(dep => dep.typeName());
+        if (isRequest.length) {
+          Container.registryScope({ token: ctx, providers: isRequest, imp: target });
+          const instance: any = Container.get(ctx, target);
+          await instance[methodName].apply(instance, params);
+          Container.deleteScope(ctx);
+        } else {
+          const instance: any = Container.get(baseRoute);
+          return instance[methodName].apply(instance, params);
+        }
       };
 
       return {
