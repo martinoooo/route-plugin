@@ -2,7 +2,7 @@ import Koa from 'koa';
 import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import { IKoaServerConfig } from '../declares';
-import { parseRoute } from '../decorators/router';
+import { parseRoute } from '../core/parseRoute';
 
 export function useKoaServer(app: Koa, config: IKoaServerConfig) {
   const koaRouter = new Router();
