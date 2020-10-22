@@ -31,17 +31,7 @@ export function parseRoute(target: Function): IRouteConfig[] {
         });
         const params = decoratorParams.concat([ctx, next]);
 
-        // 分析如果依赖有request scope
-        const deps: DepsConfig[] = Reflect.getMetadata(depsMetadata, prototype) || [];
-        const isRequest = deps
-          .filter(dep => {
-            if (dep.propertyKey) {
-              const type = dep.typeName();
-              return Reflect.getMetadata(SCOPE_REQUEST_METADATA, type);
-            }
-            return false;
-          })
-          .map(dep => dep.typeName());
+        const isRequest = analyzeDeps(target);
         if (isRequest.length) {
           Container.registryScope({ token: ctx, providers: isRequest, imp: target });
           const instance: any = Container.get(ctx, target);
@@ -63,4 +53,43 @@ export function parseRoute(target: Function): IRouteConfig[] {
     });
 }
 
-function analyzeParams() {}
+// 分析依赖是否有request scope
+function analyzeDeps(target: Function) {
+  const paramsDeps: DepsConfig[] = Reflect.getMetadata('design:paramtypes', target) || [];
+  const paramsInject: DepsConfig[] = Reflect.getMetadata(depsMetadata, target) || [];
+
+  const dep1: any[] = paramsDeps
+    .map((provider: any, index) => {
+      const paramDep = paramsInject.find(dep => dep.index === index);
+      // should return paramsInject
+      if (paramDep && paramDep.typeName()) {
+        const typeName = paramDep.typeName();
+        const serverConfig = Container.getServerConfig(typeName);
+        const { imp } = serverConfig || {};
+        if (Reflect.getMetadata(SCOPE_REQUEST_METADATA, imp)) {
+          return {
+            token: typeName,
+            imp,
+          };
+        }
+        return false;
+      } else if (Reflect.getMetadata(SCOPE_REQUEST_METADATA, provider)) {
+        return provider;
+      }
+    })
+    .filter(dep => !!dep);
+
+  // TODO: named deps
+  const injects: DepsConfig[] = Reflect.getMetadata(depsMetadata, target.prototype) || [];
+  const dep2 = injects
+    .filter(dep => {
+      if (dep.propertyKey) {
+        const type = dep.typeName();
+        return Reflect.getMetadata(SCOPE_REQUEST_METADATA, type);
+      }
+      return false;
+    })
+    .map(dep => dep.typeName());
+
+  return dep1.concat(dep2);
+}
