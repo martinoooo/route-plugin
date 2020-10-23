@@ -79,17 +79,23 @@ function analyzeDeps(target: Function) {
     })
     .filter(dep => !!dep);
 
-  // TODO: named deps
   const injects: DepsConfig[] = Reflect.getMetadata(depsMetadata, target.prototype) || [];
   const dep2 = injects
-    .filter(dep => {
+    .map(dep => {
       if (dep.propertyKey) {
-        const type = dep.typeName();
-        return Reflect.getMetadata(SCOPE_REQUEST_METADATA, type);
+        const typeName = dep.typeName();
+        const serverConfig = Container.getServerConfig(typeName);
+        const { imp } = serverConfig || {};
+        if (Reflect.getMetadata(SCOPE_REQUEST_METADATA, imp)) {
+          return {
+            token: typeName,
+            imp,
+          };
+        }
       }
       return false;
     })
-    .map(dep => dep.typeName());
+    .filter(dep => !!dep);
 
   return dep1.concat(dep2);
 }
