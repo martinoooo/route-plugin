@@ -31,9 +31,9 @@ export function parseRoute(target: Function): IRouteConfig[] {
         });
         const params = decoratorParams.concat([ctx, next]);
 
-        const isRequest = analyzeDeps(target);
-        if (isRequest.length) {
-          Container.registryScope({ token: ctx, providers: isRequest, imp: target });
+        const hasScopeService = analyzeDeps(target);
+        if (hasScopeService.length) {
+          Container.registryScope({ token: ctx, providers: hasScopeService, imp: target });
           const instance: any = Container.get(ctx, target);
           await instance[methodName].apply(instance, params);
           Container.deleteScope(ctx);
@@ -55,47 +55,58 @@ export function parseRoute(target: Function): IRouteConfig[] {
 
 // 分析依赖是否有request scope
 function analyzeDeps(target: Function) {
+  const consDeps = analyzeConstructor(target);
+  const injectDeps = analyzeInject(target);
+
+  return consDeps.concat(injectDeps);
+}
+
+function analyzeConstructor(target: Function) {
   const paramsDeps: DepsConfig[] = Reflect.getMetadata('design:paramtypes', target) || [];
   const paramsInject: DepsConfig[] = Reflect.getMetadata(depsMetadata, target) || [];
 
-  const dep1: any[] = paramsDeps
+  const deps: any[] = paramsDeps
     .map((provider: any, index) => {
       const paramDep = paramsInject.find(dep => dep.index === index);
       // should return paramsInject
       if (paramDep && paramDep.typeName()) {
-        const typeName = paramDep.typeName();
-        const serverConfig = Container.getServerConfig(typeName);
-        const { imp } = serverConfig || {};
-        if (Reflect.getMetadata(SCOPE_REQUEST_METADATA, imp)) {
-          return {
-            token: typeName,
-            imp,
-          };
-        }
-        return false;
+        return getInjectProvider(paramDep);
       } else if (Reflect.getMetadata(SCOPE_REQUEST_METADATA, provider)) {
         return provider;
       }
     })
     .filter(dep => !!dep);
 
+  return deps;
+}
+
+function analyzeInject(target: Function) {
   const injects: DepsConfig[] = Reflect.getMetadata(depsMetadata, target.prototype) || [];
-  const dep2 = injects
+  const deps = injects
     .map(dep => {
       if (dep.propertyKey) {
-        const typeName = dep.typeName();
-        const serverConfig = Container.getServerConfig(typeName);
-        const { imp } = serverConfig || {};
-        if (Reflect.getMetadata(SCOPE_REQUEST_METADATA, imp)) {
-          return {
-            token: typeName,
-            imp,
-          };
-        }
+        return getInjectProvider(dep);
       }
       return false;
     })
     .filter(dep => !!dep);
 
-  return dep1.concat(dep2);
+  return deps;
+}
+
+/**
+ * 获取创建scope service的config
+ * @param dep
+ */
+function getInjectProvider(dep: DepsConfig) {
+  const typeName = dep.typeName();
+  const serverConfig = Container.getServerConfig(typeName);
+  const { imp } = serverConfig || {};
+  if (Reflect.getMetadata(SCOPE_REQUEST_METADATA, imp)) {
+    return {
+      token: typeName,
+      imp,
+    };
+  }
+  return null;
 }

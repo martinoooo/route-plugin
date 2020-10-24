@@ -140,7 +140,7 @@ describe('Scope_Request', function () {
     });
   });
 
-  describe('use inject constructor', () => {
+  describe('use named inject constructor', () => {
     @Router('test')
     class SomeClass {
       constructor(
