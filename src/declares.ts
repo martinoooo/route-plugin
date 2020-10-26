@@ -4,9 +4,11 @@ export const METHOD_METADATA = Symbol('method');
 export const PATH_METADATA = Symbol('path');
 export const PARAMS_METADATA = Symbol('params');
 export const SCOPE_REQUEST_METADATA = Symbol('scope_request');
+export const MIDDLEWARE_METADATA = Symbol('middleware');
 
 export interface IKoaServerConfig {
   routers?: Function[];
+  middlewares?: Function[];
 }
 
 export type IRouteConfig = {
@@ -38,5 +40,13 @@ export type ProviderConfig = {
   scope?: Scope;
   token?: Token;
 };
+
+export type MiddlewareConfig = {
+  priority: number;
+};
+
+export interface KoaMiddlewareInterface {
+  use(context: any, next: (err?: any) => Promise<any>): Promise<any>;
+}
 
 export type ClassDecorator = <T extends { new (...args: any[]): {} }>(target: T) => T | void;
