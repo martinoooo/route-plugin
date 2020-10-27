@@ -49,6 +49,7 @@ class SomeRouter {
         resolve();
       }, Number(id));
     });
+    console.log(111);
     ctx.body = this.someService.mySecret();
   }
 }
@@ -66,11 +67,24 @@ class SomeMiddleware implements KoaMiddlewareInterface {
   }
 }
 
+@Middleware({ priority: 109 })
+class SomeMiddleware2 implements KoaMiddlewareInterface {
+  async use(context: any, next: (err?: any) => Promise<any>): Promise<any> {
+    console.log('do something before execution...');
+    try {
+      await next();
+      console.log('do something after execution');
+    } catch (error) {
+      console.log('error handling is also here');
+    }
+  }
+}
+
 describe('Scope_Request', function () {
   describe('use inject', () => {
     useKoaServer(app, {
       routers: [SomeRouter],
-      middlewares: [SomeMiddleware],
+      middlewares: [SomeMiddleware, SomeMiddleware2],
     });
 
     it('should get params', async () => {

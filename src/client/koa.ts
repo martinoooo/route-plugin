@@ -1,25 +1,63 @@
 import Koa from 'koa';
 import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
-import { IKoaServerConfig } from '../declares';
+import { IKoaServerConfig, MIDDLEWARE_METADATA, MiddlewareMetadata, KoaMiddlewareInterface } from '../declares';
 import { parseRoute } from '../core/parseRoute';
+import { Container } from '@martinoooo/dependency-injection';
 
 export function useKoaServer(app: Koa, config: IKoaServerConfig) {
-  const koaRouter = new Router();
-  const { routers = [], middlewares = [] } = config;
+  new KoaInstance(app, config);
+}
 
-  routers.map(router => registryRoute(koaRouter, router));
+class KoaInstance {
+  app: Koa<Koa.DefaultState, Koa.DefaultContext>;
+  config: IKoaServerConfig;
+  koaRouter: Router<any, {}>;
 
-  app.use(bodyParser());
-  app.use(koaRouter.routes()).use(koaRouter.allowedMethods());
+  constructor(app: Koa, config: IKoaServerConfig) {
+    this.app = app;
+    this.config = config;
+    this.koaRouter = new Router();
+    this.init();
+  }
 
-  //   registerMiddleware(middleware: MiddlewareMetadata): void {
-  //     if ((middleware.instance as KoaMiddlewareInterface).use) {
-  //         this.koa.use(function (ctx: any, next: any) {
-  //             return (middleware.instance as KoaMiddlewareInterface).use(ctx, next);
-  //         });
-  //     }
-  // }
+  init() {
+    this.app.use(bodyParser());
+    const { routers = [], middlewares = [] } = this.config;
+
+    const formatedMiddlewares = this.getMiddlewaresInform(middlewares);
+
+    this.registerMiddlewares(formatedMiddlewares);
+    this.registerControllers(routers);
+
+    this.app.use(this.koaRouter.routes()).use(this.koaRouter.allowedMethods());
+  }
+
+  protected getMiddlewaresInform(middlewares: Function[]): MiddlewareMetadata[] {
+    return middlewares
+      .map(middleware => {
+        const priority = Reflect.getMetadata(MIDDLEWARE_METADATA, middleware);
+        return {
+          priority,
+          middleware,
+        };
+      })
+      .sort((a, b) => a.priority - b.priority);
+  }
+
+  registerMiddlewares(middlewares: MiddlewareMetadata[]) {
+    middlewares.map(m => {
+      const { middleware } = m;
+      const instance: KoaMiddlewareInterface = Container.get(middleware);
+      this.app.use(function (ctx: any, next: any) {
+        return instance.use(ctx, next);
+      });
+    });
+  }
+
+  registerControllers(routers: Function[]) {
+    routers.map(router => registryRoute(this.koaRouter, router));
+  }
 }
 
 function registryRoute(koaRouter: any, router: Function) {

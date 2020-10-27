@@ -45,6 +45,10 @@ export type MiddlewareConfig = {
   priority: number;
 };
 
+export type MiddlewareMetadata = MiddlewareConfig & {
+  middleware: Function;
+};
+
 export interface KoaMiddlewareInterface {
   use(context: any, next: (err?: any) => Promise<any>): Promise<any>;
 }
