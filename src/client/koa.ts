@@ -45,6 +45,14 @@ class KoaInstance {
       .sort((a, b) => a.priority - b.priority);
   }
 
+  protected registryRoute(router: Function) {
+    const routes = parseRoute(router);
+    routes.map(config => {
+      const route = `/${config.baseRoute}${config.route}`;
+      (this.koaRouter as any)[config.method.toLowerCase()](route, config.fn);
+    });
+  }
+
   registerMiddlewares(middlewares: MiddlewareMetadata[]) {
     middlewares.map(m => {
       const { middleware } = m;
@@ -56,14 +64,6 @@ class KoaInstance {
   }
 
   registerControllers(routers: Function[]) {
-    routers.map(router => registryRoute(this.koaRouter, router));
+    routers.map(router => this.registryRoute(router));
   }
-}
-
-function registryRoute(koaRouter: any, router: Function) {
-  const routes = parseRoute(router);
-  routes.map(config => {
-    const route = `/${config.baseRoute}${config.route}`;
-    koaRouter[config.method.toLowerCase()](route, config.fn);
-  });
 }

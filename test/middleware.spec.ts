@@ -49,7 +49,7 @@ class SomeRouter {
         resolve();
       }, Number(id));
     });
-    console.log(111);
+    console.log('someGetMethod');
     ctx.body = this.someService.mySecret();
   }
 }
@@ -57,10 +57,10 @@ class SomeRouter {
 @Middleware({ priority: 1 })
 class SomeMiddleware implements KoaMiddlewareInterface {
   async use(context: any, next: (err?: any) => Promise<any>): Promise<any> {
-    console.log('do something before execution...');
+    console.log('do SomeMiddleware before execution...');
     try {
       await next();
-      console.log('do something after execution');
+      console.log('do SomeMiddleware after execution');
     } catch (error) {
       console.log('error handling is also here');
     }
@@ -70,10 +70,10 @@ class SomeMiddleware implements KoaMiddlewareInterface {
 @Middleware({ priority: 109 })
 class SomeMiddleware2 implements KoaMiddlewareInterface {
   async use(context: any, next: (err?: any) => Promise<any>): Promise<any> {
-    console.log('do something before execution...');
+    console.log('do SomeMiddleware2 before execution...');
     try {
       await next();
-      console.log('do something after execution');
+      console.log('do SomeMiddleware2 after execution');
     } catch (error) {
       console.log('error handling is also here');
     }
@@ -81,6 +81,13 @@ class SomeMiddleware2 implements KoaMiddlewareInterface {
 }
 
 describe('Scope_Request', function () {
+  let consoleOutput = [];
+  const mockedWarn = output => consoleOutput.push(output);
+  beforeEach(() => {
+    consoleOutput = [];
+    console.log = mockedWarn;
+  });
+
   describe('use inject', () => {
     useKoaServer(app, {
       routers: [SomeRouter],
@@ -90,6 +97,14 @@ describe('Scope_Request', function () {
     it('should get params', async () => {
       let response = await request(app.callback()).get('/test/a/1000');
       expect(response.text).toBe('Hello World!1000');
+
+      expect(consoleOutput).toEqual([
+        'do SomeMiddleware before execution...',
+        'do SomeMiddleware2 before execution...',
+        'someGetMethod',
+        'do SomeMiddleware2 after execution',
+        'do SomeMiddleware after execution',
+      ]);
     });
   });
 });
