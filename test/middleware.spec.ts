@@ -15,6 +15,7 @@ import {
 import { Inject, Container } from '@martinoooo/dependency-injection';
 import app from './koa-instance';
 import request from 'supertest';
+import logger from 'koa-logger';
 
 interface IParams {
   id: string;
@@ -49,7 +50,7 @@ class SomeRouter {
         resolve();
       }, Number(id));
     });
-    console.log('someGetMethod');
+    console.warn('someGetMethod');
     ctx.body = this.someService.mySecret();
   }
 }
@@ -57,12 +58,12 @@ class SomeRouter {
 @Middleware({ priority: 1 })
 class SomeMiddleware implements KoaMiddlewareInterface {
   async use(context: any, next: (err?: any) => Promise<any>): Promise<any> {
-    console.log('do SomeMiddleware before execution...');
+    console.warn('do SomeMiddleware before execution...');
     try {
       await next();
-      console.log('do SomeMiddleware after execution');
+      console.warn('do SomeMiddleware after execution');
     } catch (error) {
-      console.log('error handling is also here');
+      console.warn('error handling is also here');
     }
   }
 }
@@ -70,12 +71,12 @@ class SomeMiddleware implements KoaMiddlewareInterface {
 @Middleware({ priority: 109 })
 class SomeMiddleware2 implements KoaMiddlewareInterface {
   async use(context: any, next: (err?: any) => Promise<any>): Promise<any> {
-    console.log('do SomeMiddleware2 before execution...');
+    console.warn('do SomeMiddleware2 before execution...');
     try {
       await next();
-      console.log('do SomeMiddleware2 after execution');
+      console.warn('do SomeMiddleware2 after execution');
     } catch (error) {
-      console.log('error handling is also here');
+      console.warn('error handling is also here');
     }
   }
 }
@@ -85,13 +86,20 @@ describe('Scope_Request', function () {
   const mockedWarn = output => consoleOutput.push(output);
   beforeEach(() => {
     consoleOutput = [];
-    console.log = mockedWarn;
+    console.warn = mockedWarn;
   });
 
   describe('use inject', () => {
     useKoaServer(app, {
       routers: [SomeRouter],
-      middlewares: [SomeMiddleware, SomeMiddleware2],
+      middlewares: [
+        SomeMiddleware,
+        SomeMiddleware2,
+        {
+          middleware: logger(),
+          priority: 120,
+        },
+      ],
     });
 
     it('should get params', async () => {

@@ -1,4 +1,5 @@
 import { Token } from '@martinoooo/dependency-injection';
+import { Middleware } from 'koa';
 
 export const METHOD_METADATA = Symbol('method');
 export const PATH_METADATA = Symbol('path');
@@ -8,8 +9,10 @@ export const MIDDLEWARE_METADATA = Symbol('middleware');
 
 export interface IKoaServerConfig {
   routers?: Function[];
-  middlewares?: Function[];
+  middlewares?: Array<IKoaMiddlewareConfig>;
 }
+
+export type IKoaMiddlewareConfig = Function | (MiddlewareConfig & { middleware: Middleware });
 
 export type IRouteConfig = {
   baseRoute: string;
@@ -46,11 +49,11 @@ export type MiddlewareConfig = {
 };
 
 export type MiddlewareMetadata = MiddlewareConfig & {
-  middleware: Function;
+  middleware: KoaMiddlewareInterface;
 };
 
 export interface KoaMiddlewareInterface {
-  use(context: any, next: (err?: any) => Promise<any>): Promise<any>;
+  use: Middleware;
 }
 
 export type ClassDecorator = <T extends { new (...args: any[]): {} }>(target: T) => T | void;

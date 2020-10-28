@@ -1,7 +1,13 @@
 import Koa from 'koa';
 import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
-import { IKoaServerConfig, MIDDLEWARE_METADATA, MiddlewareMetadata, KoaMiddlewareInterface } from '../declares';
+import {
+  IKoaServerConfig,
+  MIDDLEWARE_METADATA,
+  MiddlewareMetadata,
+  KoaMiddlewareInterface,
+  IKoaMiddlewareConfig,
+} from '../declares';
 import { parseRoute } from '../core/parseRoute';
 import { Container } from '@martinoooo/dependency-injection';
 
@@ -33,14 +39,23 @@ class KoaInstance {
     this.app.use(this.koaRouter.routes()).use(this.koaRouter.allowedMethods());
   }
 
-  protected getMiddlewaresInform(middlewares: Function[]): MiddlewareMetadata[] {
-    return middlewares
-      .map(middleware => {
-        const priority = Reflect.getMetadata(MIDDLEWARE_METADATA, middleware);
-        return {
-          priority,
-          middleware,
-        };
+  protected getMiddlewaresInform(configs: IKoaMiddlewareConfig[]): MiddlewareMetadata[] {
+    return configs
+      .map(config => {
+        if (typeof config === 'function') {
+          const priority: number = Reflect.getMetadata(MIDDLEWARE_METADATA, config);
+          return {
+            priority,
+            middleware: Container.get<KoaMiddlewareInterface>(config),
+          };
+        } else {
+          return {
+            priority: config.priority,
+            middleware: {
+              use: config.middleware,
+            },
+          };
+        }
       })
       .sort((a, b) => a.priority - b.priority);
   }
@@ -56,9 +71,8 @@ class KoaInstance {
   registerMiddlewares(middlewares: MiddlewareMetadata[]) {
     middlewares.map(m => {
       const { middleware } = m;
-      const instance: KoaMiddlewareInterface = Container.get(middleware);
       this.app.use(function (ctx: any, next: any) {
-        return instance.use(ctx, next);
+        return middleware.use(ctx, next);
       });
     });
   }
