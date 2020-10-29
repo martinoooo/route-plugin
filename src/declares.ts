@@ -6,10 +6,12 @@ export const PATH_METADATA = Symbol('path');
 export const PARAMS_METADATA = Symbol('params');
 export const SCOPE_REQUEST_METADATA = Symbol('scope_request');
 export const MIDDLEWARE_METADATA = Symbol('middleware');
+export const CATCH_METADATA = Symbol('catch');
 
 export interface IKoaServerConfig {
   routers?: Function[];
   middlewares?: Array<IKoaMiddlewareConfig>;
+  catcher?: typeof KoaCatchInterface;
 }
 
 export type IKoaMiddlewareConfig = Function | (MiddlewareConfig & { middleware: Middleware });
@@ -54,6 +56,10 @@ export type MiddlewareMetadata = MiddlewareConfig & {
 
 export interface KoaMiddlewareInterface {
   use: Middleware;
+}
+
+export abstract class KoaCatchInterface {
+  abstract catch(exception: any, context: any): any;
 }
 
 export type ClassDecorator = <T extends { new (...args: any[]): {} }>(target: T) => T | void;

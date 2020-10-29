@@ -6,4 +6,5 @@ export { Provider } from './decorators/provider';
 export * from './declares';
 export * from './core/parseRoute';
 export * from './decorators/middleware';
+export * from './decorators/catch';
 export { useKoaServer } from './client/koa';

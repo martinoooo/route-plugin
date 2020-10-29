@@ -7,6 +7,7 @@ import {
   MiddlewareMetadata,
   KoaMiddlewareInterface,
   IKoaMiddlewareConfig,
+  KoaCatchInterface,
 } from '../declares';
 import { parseRoute } from '../core/parseRoute';
 import { Container } from '@martinoooo/dependency-injection';
@@ -39,6 +40,19 @@ class KoaInstance {
     this.app.use(this.koaRouter.routes()).use(this.koaRouter.allowedMethods());
   }
 
+  registerMiddlewares(middlewares: MiddlewareMetadata[]) {
+    middlewares.map(m => {
+      const { middleware } = m;
+      this.app.use(function (ctx: any, next: any) {
+        return middleware.use(ctx, next);
+      });
+    });
+  }
+
+  registerControllers(routers: Function[]) {
+    routers.map(router => this.registryRoute(router));
+  }
+
   protected getMiddlewaresInform(configs: IKoaMiddlewareConfig[]): MiddlewareMetadata[] {
     return configs
       .map(config => {
@@ -62,22 +76,23 @@ class KoaInstance {
 
   protected registryRoute(router: Function) {
     const routes = parseRoute(router);
+    const { catcher } = this.config;
+
     routes.map(config => {
       const route = `/${config.baseRoute}${config.route}`;
-      (this.koaRouter as any)[config.method.toLowerCase()](route, config.fn);
+      const func = async (ctx: any, next: any) => {
+        try {
+          await config.fn(ctx, next);
+        } catch (e) {
+          if (catcher) {
+            const catcherIns = Container.get<KoaCatchInterface>(catcher);
+            await catcherIns.catch(e, ctx);
+          } else {
+            throw e;
+          }
+        }
+      };
+      (this.koaRouter as any)[config.method.toLowerCase()](route, func);
     });
-  }
-
-  registerMiddlewares(middlewares: MiddlewareMetadata[]) {
-    middlewares.map(m => {
-      const { middleware } = m;
-      this.app.use(function (ctx: any, next: any) {
-        return middleware.use(ctx, next);
-      });
-    });
-  }
-
-  registerControllers(routers: Function[]) {
-    routers.map(router => this.registryRoute(router));
   }
 }

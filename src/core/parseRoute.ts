@@ -39,7 +39,7 @@ export function parseRoute(target: Function): IRouteConfig[] {
           Container.deleteScope(ctx);
         } else {
           const instance: any = Container.get(baseRoute);
-          return instance[methodName].apply(instance, params);
+          await instance[methodName].apply(instance, params);
         }
       };
 
