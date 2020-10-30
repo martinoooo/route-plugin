@@ -25,19 +25,19 @@ describe('Container', function () {
       @Get('/a/:id')
       async someGetMethod(@Param() params: IParams, ctx) {
         const { id } = params;
-        ctx.body = this.someService.mySecret(id);
+        return this.someService.mySecret(id);
       }
 
       @Get('/b')
       queryGetMethod(@Query() params: IParams, ctx) {
         const { id } = params;
-        ctx.body = this.someService.mySecret(id);
+        return this.someService.mySecret(id);
       }
 
       @Post('/c')
       somePostMethod(@Body() params: IParams, ctx) {
         const { id } = params;
-        ctx.body = this.someService.mySecret(id);
+        return this.someService.mySecret(id);
       }
     }
 

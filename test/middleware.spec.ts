@@ -51,7 +51,7 @@ class SomeRouter {
       }, Number(id));
     });
     console.warn('someGetMethod');
-    ctx.body = this.someService.mySecret();
+    return this.someService.mySecret();
   }
 }
 

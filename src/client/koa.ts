@@ -8,9 +8,11 @@ import {
   KoaMiddlewareInterface,
   IKoaMiddlewareConfig,
   KoaCatchInterface,
+  KoaInterCeptorInterface,
 } from '../declares';
 import { parseRoute } from '../core/parseRoute';
 import { Container } from '@martinoooo/dependency-injection';
+import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 
 export function useKoaServer(app: Koa, config: IKoaServerConfig) {
   new KoaInstance(app, config);
@@ -76,13 +78,18 @@ class KoaInstance {
 
   protected registryRoute(router: Function) {
     const routes = parseRoute(router);
-    const { catcher } = this.config;
+    const { catcher, interceptors = [] } = this.config;
 
     routes.map(config => {
       const route = `/${config.baseRoute}${config.route}`;
       const func = async (ctx: any, next: any) => {
         try {
-          await config.fn(ctx, next);
+          const result = await config.fn(ctx, next);
+          const fi = interceptors.reduce((r, interceptor) => {
+            const i = Container.get<KoaInterCeptorInterface>(interceptor);
+            return i.intercept(r);
+          }, result);
+          ctx.body = fi || result;
         } catch (e) {
           if (catcher) {
             const catcherIns = Container.get<KoaCatchInterface>(catcher);

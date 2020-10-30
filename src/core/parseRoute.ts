@@ -35,11 +35,12 @@ export function parseRoute(target: Function): IRouteConfig[] {
         if (hasScopeService.length) {
           Container.registryScope({ token: ctx, providers: hasScopeService, imp: target });
           const instance: any = Container.get(ctx, target);
-          await instance[methodName].apply(instance, params);
+          const result = await instance[methodName].apply(instance, params);
           Container.deleteScope(ctx);
+          return result;
         } else {
           const instance: any = Container.get(baseRoute);
-          await instance[methodName].apply(instance, params);
+          return await instance[methodName].apply(instance, params);
         }
       };
 

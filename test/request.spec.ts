@@ -60,7 +60,7 @@ describe('Scope_Request', function () {
             resolve();
           }, Number(id));
         });
-        ctx.body = this.someService.mySecret();
+        return this.someService.mySecret();
       }
     }
 
@@ -92,7 +92,7 @@ describe('Scope_Request', function () {
             resolve();
           }, Number(id));
         });
-        ctx.body = this.someService.mySecret();
+        return this.someService.mySecret();
       }
     }
 
@@ -123,7 +123,7 @@ describe('Scope_Request', function () {
             resolve();
           }, Number(id));
         });
-        ctx.body = this.someService.mySecret();
+        return this.someService.mySecret();
       }
     }
 
@@ -157,7 +157,7 @@ describe('Scope_Request', function () {
             resolve();
           }, Number(id));
         });
-        ctx.body = this.someService.mySecret();
+        return this.someService.mySecret();
       }
     }
 
