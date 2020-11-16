@@ -8,6 +8,8 @@ export const SCOPE_REQUEST_METADATA = Symbol('scope_request');
 export const MIDDLEWARE_METADATA = Symbol('middleware');
 export const CATCH_METADATA = Symbol('catch');
 export const INTERCEPTOR_METADATA = Symbol('interceptor');
+export const SCOPE_SERVICE_CACHE = Symbol('cache');
+export const IS_SCOPE_SERVICE = Symbol('is_scope');
 
 export interface IKoaServerConfig {
   routers?: Function[];

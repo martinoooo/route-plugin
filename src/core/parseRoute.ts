@@ -1,4 +1,12 @@
-import { METHOD_METADATA, PATH_METADATA, IRouteConfig, PARAMS_METADATA, SCOPE_REQUEST_METADATA } from '../declares';
+import {
+  METHOD_METADATA,
+  PATH_METADATA,
+  IRouteConfig,
+  PARAMS_METADATA,
+  SCOPE_REQUEST_METADATA,
+  IS_SCOPE_SERVICE,
+  SCOPE_SERVICE_CACHE,
+} from '../declares';
 import { isConstructor, isFunction } from '../utils';
 import { Container, depsMetadata, DepsConfig } from '@martinoooo/dependency-injection';
 
@@ -56,10 +64,23 @@ export function parseRoute(target: Function): IRouteConfig[] {
 
 // 分析依赖是否有request scope
 function analyzeDeps(target: Function) {
-  const consDeps = analyzeConstructor(target);
-  const injectDeps = analyzeInject(target);
-
-  return consDeps.concat(injectDeps);
+  const is_scope = Reflect.getMetadata(IS_SCOPE_SERVICE, target);
+  if (is_scope) {
+    return Reflect.getMetadata(SCOPE_SERVICE_CACHE, target);
+  } else if (is_scope === false) {
+    return [];
+  } else {
+    const consDeps = analyzeConstructor(target);
+    const injectDeps = analyzeInject(target);
+    const deps = consDeps.concat(injectDeps);
+    if (deps.length) {
+      Reflect.defineMetadata(SCOPE_SERVICE_CACHE, deps, target);
+      Reflect.defineMetadata(IS_SCOPE_SERVICE, true, target);
+    } else {
+      Reflect.defineMetadata(IS_SCOPE_SERVICE, false, target);
+    }
+    return deps;
+  }
 }
 
 function analyzeConstructor(target: Function) {

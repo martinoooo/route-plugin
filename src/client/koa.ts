@@ -12,7 +12,6 @@ import {
 } from '../declares';
 import { parseRoute } from '../core/parseRoute';
 import { Container } from '@martinoooo/dependency-injection';
-import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 
 export function useKoaServer(app: Koa, config: IKoaServerConfig) {
   new KoaInstance(app, config);

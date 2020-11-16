@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import { Router, Get, useKoaServer, Interceptor, KoaInterCeptorInterface } from '../src';
-import app from './koa-instance';
 import request from 'supertest';
 import logger from 'koa-logger';
+import Koa from 'koa';
 
 @Interceptor()
 class someInterceptor implements KoaInterCeptorInterface {
@@ -32,6 +32,7 @@ describe('Scope_Request', function () {
   });
 
   describe('use inject', () => {
+    const app = new Koa();
     useKoaServer(app, {
       routers: [SomeRouter],
       interceptors: [someInterceptor],

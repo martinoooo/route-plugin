@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Router, Get, Post, Provider, useKoaServer, Param, Query, Body, Scope } from '../src';
 import { Inject, Container } from '@martinoooo/dependency-injection';
-import app from './koa-instance';
+import Koa from 'koa';
 import request from 'supertest';
 
 interface IParams {
@@ -64,6 +64,7 @@ describe('Scope_Request', function () {
       }
     }
 
+    const app = new Koa();
     useKoaServer(app, {
       routers: [SomeClass],
     });
@@ -96,6 +97,7 @@ describe('Scope_Request', function () {
       }
     }
 
+    const app = new Koa();
     useKoaServer(app, {
       routers: [SomeClass],
     });
@@ -127,6 +129,7 @@ describe('Scope_Request', function () {
       }
     }
 
+    const app = new Koa();
     useKoaServer(app, {
       routers: [SomeClass],
     });
@@ -161,6 +164,7 @@ describe('Scope_Request', function () {
       }
     }
 
+    const app = new Koa();
     useKoaServer(app, {
       routers: [SomeClass],
     });

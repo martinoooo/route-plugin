@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Router, Get, Post, useKoaServer, Param, Query, Body, Provider } from '../src';
 import { Inject } from '@martinoooo/dependency-injection';
-import app from './koa-instance';
+import Koa from 'koa';
 import request from 'supertest';
 
 describe('Container', function () {
@@ -41,6 +41,7 @@ describe('Container', function () {
       }
     }
 
+    const app = new Koa();
     useKoaServer(app, {
       routers: [SomeClass],
     });

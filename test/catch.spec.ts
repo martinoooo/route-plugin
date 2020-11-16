@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { Router, Get, useKoaServer, Catch, KoaCatchInterface } from '../src';
-import app from './koa-instance';
+import Koa from 'koa';
 import request from 'supertest';
 import logger from 'koa-logger';
 
@@ -28,6 +28,7 @@ describe('Scope_Request', function () {
   });
 
   describe('use inject', () => {
+    const app = new Koa();
     useKoaServer(app, {
       routers: [SomeRouter],
       catcher: someCatch,
